@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import { supabase } from '../../supabase';
 
 /* Server */
-import { Http, JsonResponse } from '../../server';
+import { Http, JsonResponse, Logger } from '../../server';
 
 /* Utils */
 import { sendNotification } from '../../utils';
@@ -21,14 +21,14 @@ class ApplicationNotifications {
     public static async newVersion(req: Request, res: Response): Promise<JsonResponse | void> {
         try {
             const { data, error } = await supabase.auth.admin.listUsers();
-            if (error) return Http.sendResp(error.message, 500, res);
+            if (error) return Http.sendResp(error.message, Http.INTERNAL_SERVER_ERROR, res);
 
             const { version, launchUrl } = req.body;
 
             const userIds = data.users.map(({ id }) => id);
 
             const notification = {
-                contents: `Ya esta disponible la nueva versión de JW Reports ${version}. Para obtenerla preciona está notificación y descargala.`,
+                contents: `Ya esta disponible la nueva versión de JW Reports ${ version }. Para obtenerla preciona está notificación y descargala.`,
                 headings: 'Actualización de JW Reports',
                 external_user_ids: userIds,
                 launchUrl
@@ -36,7 +36,7 @@ class ApplicationNotifications {
 
             await sendNotification(notification);
             const hour = dayjs().tz('America/Managua');
-            console.log(`${ hour.format('HH:mm:ss') } New version notification sent.`);
+            Logger.success(`${ hour.format('HH:mm:ss') } New version notification sent.`);
         } 
         catch (error) {
             throw error;
